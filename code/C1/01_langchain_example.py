@@ -9,16 +9,23 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
+from pathlib import Path
+
 load_dotenv()
 
-markdown_path = "../../data/C1/markdown/easy-rl-chapter1.md"
+project_root = Path(__file__).resolve().parents[2]
+markdown_path = str(
+    project_root / "data" / "C1" / "markdown" / "easy-rl-chapter1.md"
+)
+
+# markdown_path = "../../data/C1/markdown/easy-rl-chapter1.md"
 
 # 加载本地markdown文件
 loader = UnstructuredMarkdownLoader(markdown_path)
 docs = loader.load()
 
 # 文本分块
-text_splitter = RecursiveCharacterTextSplitter()
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=100)
 chunks = text_splitter.split_documents(docs)
 
 # 中文嵌入模型
@@ -48,21 +55,21 @@ prompt = ChatPromptTemplate.from_template("""请根据下面提供的上下文�
 # 配置大语言模型
 
 # 使用 AIHubmix
-llm = ChatOpenAI(
-    model="glm-4.7-flash-free",
-    temperature=0.7,
-    max_tokens=4096,
-    api_key=os.getenv("DEEPSEEK_API_KEY"),
-    base_url="https://aihubmix.com/v1"
-)
-
 # llm = ChatOpenAI(
-#     model="deepseek-chat",
+#     model="glm-4.7-flash-free",
 #     temperature=0.7,
 #     max_tokens=4096,
 #     api_key=os.getenv("DEEPSEEK_API_KEY"),
-#     base_url="https://api.deepseek.com"
+#     base_url="https://aihubmix.com/v1"
 # )
+
+llm = ChatOpenAI(
+    model="deepseek-chat",
+    temperature=0.7,
+    max_tokens=4096,
+    api_key=os.getenv("DEEPSEEK_API_KEY"),
+    base_url="https://api.deepseek.com"
+)
 
 # 用户查询
 question = "文中举了哪些例子？"
@@ -72,4 +79,4 @@ retrieved_docs = vectorstore.similarity_search(question, k=3)
 docs_content = "\n\n".join(doc.page_content for doc in retrieved_docs)
 
 answer = llm.invoke(prompt.format(question=question, context=docs_content))
-print(answer)
+print(answer.content)

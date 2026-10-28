@@ -1,12 +1,19 @@
-from unstructured.partition.auto import partition
+# from unstructured.partition.auto import partition
+from unstructured.partition.pdf import partition_pdf
+from pathlib import Path
 
 # PDF文件路径
-pdf_path = "../../data/C2/pdf/rag.pdf"
+project_root = Path(__file__).resolve().parents[2]
+pdf_path = str(
+    project_root / "data" / "C2" / "pdf" / "rag.pdf"
+)
+# pdf_path = "../../data/C2/pdf/rag.pdf"
 
 # 使用Unstructured加载并解析PDF文档
-elements = partition(
+elements = partition_pdf(
     filename=pdf_path,
-    content_type="application/pdf"
+    content_type="application/pdf",
+    strategy="ocr_only"
 )
 
 # 打印解析结果
